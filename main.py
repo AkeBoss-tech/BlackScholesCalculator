@@ -7,6 +7,8 @@ from fredapi import Fred
 
 FED_API_KEY = st.secrets['FRED_API_KEY']
 
+FED_RATES = ['DGS1', 'DGS2', 'DGS3', 'DGS5', 'DGS7', 'DGS10', 'DGS20', 'DGS30', 'DGS3MO', 'DGS6MO', 'DGS1MO', 'DGS2MO', 'DGS3MO', 'DGS6MO', 'T10YIE', 'FEDFUNDS', 'USD1MTD156N', 'USD3MTD156N']
+
 def black_scholes_call(spot, strike, risk_free_rate, time, volatility):
     d1 = (log(spot / strike) + time * (risk_free_rate + 0.5 * volatility ** 2)) / (volatility * sqrt(time))
     d2 = d1 - volatility * sqrt(time)
@@ -36,17 +38,21 @@ def get_fred_data(series_id='DGS10'):
     return risk_free_rate
 
 st.write("## Black-Scholes Option Pricing Calculator")
-st.text_input("Enter your ticker", key="ticker")
-st.slider("Set time in years", min_value=0.1, max_value=5.0, step=0.1, key="time")
-clicked = st.button("Calculate")
 
-if clicked:
-    ticker = st.session_state.ticker
-    time = st.session_state.time
-    data, stock_price, volatility = get_data(ticker)
-    risk_free_rate = get_fred_data()
+# Track if the ticker was changed
+ticker = st.text_input("Enter your ticker", key="ticker")
+series = st.selectbox("Risk-free rate series", FED_RATES, key="series")
 
-    # Calculate option price
+# Only fetch data when the ticker changes
+if ticker or series:
+    data, stock_price, volatility = get_data(st.session_state.ticker)
+    risk_free_rate = get_fred_data(st.session_state.series)
+
+# Time slider with callback to recalculate option prices
+time = st.slider("Set time in years", min_value=0.1, max_value=5.0, step=0.1, key="time")
+
+if ticker and stock_price and volatility and risk_free_rate and series:
+    # Calculate option price dynamically when time slider changes
     call_price = black_scholes_call(stock_price, stock_price, risk_free_rate, time, volatility)
     put_price = black_sholes_put(stock_price, stock_price, risk_free_rate, time, volatility)
 
