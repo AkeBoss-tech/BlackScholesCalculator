@@ -4,8 +4,6 @@ from math import log, sqrt, exp
 from scipy.stats import norm
 import yfinance as yf
 from fredapi import Fred
-import os
-import streamlit as st
 
 FED_API_KEY = st.secrets['FRED_API_KEY']
 

@@ -1,0 +1,6 @@
+streamlit
+pandas
+math
+scipy
+yfinance
+fredapi
