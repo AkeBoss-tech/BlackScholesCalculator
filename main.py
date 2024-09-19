@@ -5,7 +5,7 @@ from scipy.stats import norm
 import yfinance as yf
 from fredapi import Fred
 
-FED_API_KEY = "4249f8adfd09c9ca2e18f61528e0b7d0" # st.secrets['FRED_API_KEY']
+FED_API_KEY = st.secrets['FRED_API_KEY']
 
 FED_RATES = ['DGS1', 'DGS2', 'DGS3', 'DGS5', 'DGS7', 'DGS10', 'DGS20', 'DGS30', 'DGS3MO', 'DGS6MO', 'DGS1MO', 'DGS2MO', 'DGS3MO', 'DGS6MO', 'T10YIE', 'FEDFUNDS']
 stock_price = 0.0
