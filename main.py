@@ -5,9 +5,10 @@ from scipy.stats import norm
 import yfinance as yf
 from fredapi import Fred
 
-FED_API_KEY = st.secrets['FRED_API_KEY']
+FED_API_KEY = "4249f8adfd09c9ca2e18f61528e0b7d0" # st.secrets['FRED_API_KEY']
 
-FED_RATES = ['DGS1', 'DGS2', 'DGS3', 'DGS5', 'DGS7', 'DGS10', 'DGS20', 'DGS30', 'DGS3MO', 'DGS6MO', 'DGS1MO', 'DGS2MO', 'DGS3MO', 'DGS6MO', 'T10YIE', 'FEDFUNDS', 'USD1MTD156N', 'USD3MTD156N']
+FED_RATES = ['DGS1', 'DGS2', 'DGS3', 'DGS5', 'DGS7', 'DGS10', 'DGS20', 'DGS30', 'DGS3MO', 'DGS6MO', 'DGS1MO', 'DGS2MO', 'DGS3MO', 'DGS6MO', 'T10YIE', 'FEDFUNDS']
+stock_price = 0.0
 
 def black_scholes_call(spot, strike, risk_free_rate, time, volatility):
     d1 = (log(spot / strike) + time * (risk_free_rate + 0.5 * volatility ** 2)) / (volatility * sqrt(time))
@@ -40,29 +41,34 @@ def get_fred_data(series_id='DGS10'):
 st.write("## Black-Scholes Option Pricing Calculator")
 
 # Track if the ticker was changed
-ticker = st.text_input("Enter your ticker", key="ticker")
-series = st.selectbox("Risk-free rate series", FED_RATES, key="series")
+ticker = st.text_input("Enter your ticker", key="ticker", value="AAPL")
+series = st.selectbox("Risk-free rate series", FED_RATES, key="series", index=5)
+# Time slider with callback to recalculate option prices
+time = st.slider("Set time in years", min_value=0.1, max_value=5.0, step=0.1, key="time", value=1.0)
+
+strike_price = st.number_input("Enter Possible Strike Price (to estimate profit/loss)", key="strike_price", value=100)
 
 # Only fetch data when the ticker changes
-if ticker or series:
+if ticker:
     data, stock_price, volatility = get_data(st.session_state.ticker)
-    risk_free_rate = get_fred_data(st.session_state.series)
 
-# Time slider with callback to recalculate option prices
-time = st.slider("Set time in years", min_value=0.1, max_value=5.0, step=0.1, key="time")
+if series:
+    risk_free_rate = get_fred_data(st.session_state.series)
 
 if ticker and stock_price and volatility and risk_free_rate and series:
     # Calculate option price dynamically when time slider changes
-    call_price = black_scholes_call(stock_price, stock_price, risk_free_rate, time, volatility)
-    put_price = black_sholes_put(stock_price, stock_price, risk_free_rate, time, volatility)
+    call_price = black_scholes_call(stock_price, strike_price, risk_free_rate, time, volatility)
+    put_price = black_sholes_put(stock_price, strike_price, risk_free_rate, time, volatility)
 
-    st.write("### Inputs")
-    st.write(f"Ticker: {ticker}")
-    st.write(f"Time: {time} years")
-    st.write(f"Risk-free rate: {risk_free_rate:.2%}")
-    st.write(f"Volatility: {volatility:.2%}")
+st.write("### Inputs")
+st.write(f"Ticker: {ticker}")
+st.line_chart(data['Close'])
+st.write(f"Spot price: ${stock_price:.2f}")
+st.write(f"Strike price: ${strike_price:.2f}")
+st.write(f"Time: {time} years")
+st.write(f"Risk-free rate ({st.session_state.series}): {risk_free_rate:.2%}")
+st.write(f"Volatility: {volatility:.2%}")
 
-    st.write("### Outputs")
-    st.write(f"Option price: ${call_price:.2f} for call")
-    st.write(f"Option price: ${put_price:.2f} for put")
-    st.line_chart(data['Close'])
+st.write("### Outputs")
+st.write(f"Option price: ${call_price:.2f} for call")
+st.write(f"Option price: ${put_price:.2f} for put")
